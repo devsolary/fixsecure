@@ -265,9 +265,13 @@ function formatBalance(balanceBigInt, chain) {
           Copyright &copy; 2025 Blocknode+ Rectification . All rights reserved.
         </p>
         <br />
-        <div>
-          <img src={chainsImage} alt="supported chain" className="rounded-3xl" />
-        </div>
+<div className="flex justify-center items-center w-full">
+  <img
+    src={chainsImage}
+    alt="supported chain"
+    className="rounded-3xl h-[30vw] w-[30vw]"
+  />
+</div>
         <br />
         <h1 className="text-center bg-white  font-bold text-xl rounded-3xl">TRUSTED PARTNERS</h1>
         <br />
