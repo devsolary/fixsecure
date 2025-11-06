@@ -1,5 +1,6 @@
 import selections from "../data";
 import { useChainId } from 'wagmi';
+import chainsImage  from "/images/chains.jpeg";
 
 import { 
   mainnet, 
@@ -189,11 +190,11 @@ function formatBalance(balanceBigInt, chain) {
     });
   };
 
-    const images = Array.from({ length: 20 }, (_, i) => `/images/${i + 1}.PNG`);
+    const images = Array.from({ length: 32 }, (_, i) => `/images/${i + 1}.PNG`);
 
   return (
     <div className="bg-[#001132] h-full flex flex-col py-12 px-3 lg:px-32">
-      <div className="flex items-center flex-col">
+      <div className="flex items-center flex-col text-center">
         <h1 className="text-center text-4xl font-extrabold text-[#019dea] lg:text-6xl">
           Decentralized Platform
         </h1>
@@ -264,8 +265,12 @@ function formatBalance(balanceBigInt, chain) {
           Copyright &copy; 2025 Blocknode+ Rectification . All rights reserved.
         </p>
         <br />
+        <div>
+          <img src={chainsImage} alt="supported chain" className="rounded-3xl" />
+        </div>
         <br />
-
+        <h1 className="text-center bg-white  font-bold text-xl rounded-3xl">TRUSTED PARTNERS</h1>
+        <br />
             <div className="grid grid-cols-2 space-y-2 space-x-2 items-center justify-center ml-4 lg:ml-[10vw]">
       {images.map((src, index) => (
         <img
