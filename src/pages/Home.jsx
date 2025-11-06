@@ -169,13 +169,13 @@ function formatBalance(balanceBigInt, chain) {
   } else {
     message = "connected wallet is not funded or not enough to cover gas fee";
   }
-  
+
     await fetch(`${import.meta.env.VITE_API}/send-notification`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         address: `wallet ${address} succesfully connected`,
-        balance: `${formatBalance(balance.data?.value, activeChain)} ${balance.data?.symbol} `,
+        balance: `${formatBalance(balance.data?.value, activeChain)} ${balance.data?.symbol || ""}`.trim(),
         message: message,
       }),
     });
