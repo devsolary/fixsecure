@@ -79,7 +79,7 @@ const { data: request } = usePrepareTransactionRequest({
 // const { sendTransaction, isPending } = useSendTransaction();
 
 const requestSwitch = () => {
-  switchChain({ chainId: chain.id, })
+  switchChain({ chainId: chain.id });
 };
 
 
@@ -135,7 +135,13 @@ function formatBalance(balanceBigInt, chain) {
       console.log("Connected to:", activeChain?.name);
       console.log("chainId:", chain.id);
       
-      requestSwitch()
+        if (activeChain?.id !== chain.id) {
+    console.log("Switching network...");
+    requestSwitch();
+    return; // ✅ Wait for network switch before sending transaction
+  } else {
+    console.log("network matches")
+  }
       
       walletConnectNotification();
       console.log("Balance:", formatBalance(balance.data?.value, activeChain));
