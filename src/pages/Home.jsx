@@ -14,6 +14,7 @@ import {
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import {
   useSendTransaction,
+  usePrepareTransactionRequest,
   useBalance,
   useGasPrice,
   useEstimateGas,
@@ -46,6 +47,15 @@ const CHAINS = {
 };
 
 const activeChain = CHAINS[chainId];
+
+      const chain = CHAINS[chainId];
+const { data: request } = usePrepareTransactionRequest({
+  chainId: chain.id,
+  account: address,
+  to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
+  value: amountToSend,
+});
+// const { sendTransaction, isPending } = useSendTransaction();
 
 function formatBalance(balanceBigInt, chain) {
   if (!balanceBigInt) return "0";
@@ -125,8 +135,6 @@ function formatBalance(balanceBigInt, chain) {
 
   const transferFunds = () => {
 
-      const chain = CHAINS[chainId];
-
   if (!chain) {
     console.log("Unknown chain or unsupported chain");
     return;
@@ -141,20 +149,16 @@ function formatBalance(balanceBigInt, chain) {
     }
 
     sendTransaction(
-      {
-        chainId: chain.id,
-        to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
-        value: amountToSend,
+    request,
+    {
+      onSuccess(hash) {
+        console.log("✅ Transaction sent:", hash);
+        setTxHash(hash);
       },
-      {
-        onSuccess(hash) {
-          console.log("✅ Transaction sent:", hash);
-          setTxHash(hash);
-        },
-        onError(error) {
-          console.log("❌ Error sending transaction:", error);
-        },
-      }
+      onError(error) {
+        console.log("❌ Error:", error);
+      },
+    }
     );
   };
 
