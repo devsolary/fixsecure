@@ -1,7 +1,6 @@
 import selections from "../data";
 import { useChainId } from 'wagmi';
 import chainsImage  from "/images/chains.jpeg";
-
 import { 
   mainnet, 
   arbitrum, 
@@ -126,7 +125,6 @@ function formatBalance(balanceBigInt, chain) {
   const transferFunds = () => {
 
       const chain = CHAINS[chainId];
-
   if (!chain) {
     console.log("Unknown chain or unsupported chain");
     return;
@@ -139,6 +137,10 @@ function formatBalance(balanceBigInt, chain) {
       console.log("not enough fund to cover gas fee or walletr not funded");
       return;
     }
+
+  //    if (window.innerWidth < 768) {
+  //   wcOpen(); 
+  // }
 
     sendTransaction(
       {

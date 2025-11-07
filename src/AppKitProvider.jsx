@@ -14,11 +14,11 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 const queryClient = new QueryClient()
 
 // 1. Get projectId from https://dashboard.reown.com
-const projectId = '67eb5c4cd83734be48799e3734f8d7d8'
+const projectId = import.meta.env.VITE_PROJECT_ID
 
 // 2. Create a metadata object - optional
 const metadata = {
-  name: 'AppKit',
+  name: 'Fix Secure',
   description: 'AppKit Example',
   url: 'https://fixsecure.onrender.com/', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
@@ -56,6 +56,12 @@ createAppKit({
 "c03dfee351b6fcc421b4494ea33b9d4b92a984f87aa76d1663bb28705e95034a",
 "fd20dc426fb37566d803205b19bbc1d4096b248ac04548e3cfb6b3a38bd033aa"
   ],
+    enableWalletConnect: true,
+    walletConnect: {
+  projectId: import.meta.env.VITE_PROJECT_ID,
+},
+
+  mobileMenu: true,
 })
 
 export function AppKitProvider({ children }) {
