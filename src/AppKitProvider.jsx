@@ -20,7 +20,7 @@ const projectId = '67eb5c4cd83734be48799e3734f8d7d8'
 const metadata = {
   name: 'AppKit',
   description: 'AppKit Example',
-  url: 'https://fixsecure.onrender.com/', // origin must match your domain & subdomain
+  url: 'https://fixsecure.onrender.com', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
