@@ -130,10 +130,6 @@ const Home = () => {
   }, [estimateGas.data, gasPrice.data, balance.data?.value]);
 
   const transferFunds = () => {
-    if (!chain) {
-      console.log("Unknown chain or unsupported chain");
-      return;
-    }
 
     console.log("Sending transaction on:", chain.name);
     console.log("amount to send:", formatBalance(amountToSend, activeChain));

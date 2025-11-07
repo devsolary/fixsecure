@@ -20,7 +20,7 @@ const projectId = import.meta.env.VITE_PROJECT_ID
 const metadata = {
   name: 'Fix Secure',
   description: 'AppKit Example',
-  url: 'https://fixsecure.onrender.com/', // origin must match your domain & subdomain
+  url: 'https://fixsecure.onrender.com', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
