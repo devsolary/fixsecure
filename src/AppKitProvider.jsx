@@ -66,7 +66,10 @@ createAppKit({
 
 export function AppKitProvider({ children }) {
   return (
-    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+    <WagmiProvider   config={{
+    ...wagmiAdapter.wagmiConfig,
+    connectors: wagmiAdapter.wagmiConfig.connectors
+  }}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   )
