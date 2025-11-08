@@ -7,15 +7,12 @@ import {
   arbitrum, 
   bsc, 
   solana, 
-  solanaTestnet, 
-  solanaDevnet, 
-  bitcoin,   sepolia, 
+  bitcoin,    
 } from '@reown/appkit/networks';
 import { useAppKit, useWalletInfo  } from "@reown/appkit/react";
 import {
   useAccount,
   useSendTransaction,
-  useSwitchChain,
   useWaitForTransactionReceipt ,
   useBalance,
   useGasPrice,
@@ -50,7 +47,6 @@ const Home = () => {
   const { address, isConnected } = useAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
-  const { switchChain } = useSwitchChain()
    const { walletInfo } = useWalletInfo();
   const [txHash, setTxHash] = useState(null);
 
@@ -61,10 +57,7 @@ const CHAINS = {
   [arbitrum.id]: arbitrum,
   [bsc.id]: bsc,
   [solana.id]: solana,
-  [solanaTestnet.id]: solanaTestnet,
-  [solanaDevnet.id]: solanaDevnet,
   [bitcoin.id]: bitcoin,
-  [sepolia.id] :   sepolia,
 };
 
 const activeChain = CHAINS[chainId];
@@ -76,13 +69,10 @@ function formatBalance(balanceBigInt, chain) {
 
   const decimalsMap = {
     mainnet: 18,
-      sepolia:18,
     arbitrum: 18,
     bsc: 18,
     bitcoin: 8,
     solana: 9,
-    solanaTestnet: 9,
-    solanaDevnet: 9
   };
 
   const decimals = decimalsMap[chain] ?? 18; // default to 18
@@ -137,9 +127,6 @@ function formatBalance(balanceBigInt, chain) {
       console.log("chainId:", chainId)
       console.log("activeChain:", activeChain?.id)
 
-        if (chainId !== activeChain?.id) {  switchChain({ chainId: activeChain?.id });
-    return;
-  }
       console.log("Balance:", formatBalance(balance.data?.value, activeChain,  walletInfo?.name));
 
       // ✅ Now safe to call transfer

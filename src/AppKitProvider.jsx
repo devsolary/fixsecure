@@ -5,7 +5,7 @@ import {
   mainnet, 
   arbitrum, 
   bsc, 
-  solana, solanaTestnet, solanaDevnet, bitcoin , sepolia
+  solana, bitcoin
 } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
@@ -29,7 +29,7 @@ const networks = [
   mainnet,
   arbitrum,
   bsc,
-  solana, solanaTestnet, solanaDevnet, bitcoin ,   sepolia,
+  solana, bitcoin ,  
 ]
 
 // 4. Create Wagmi Adapter
