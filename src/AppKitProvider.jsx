@@ -5,7 +5,7 @@ import {
   mainnet, 
   arbitrum, 
   bsc, 
-  solana, bitcoin
+  solana, solanaTestnet, solanaDevnet, bitcoin , sepolia
 } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
@@ -20,7 +20,7 @@ const projectId = '67eb5c4cd83734be48799e3734f8d7d8'
 const metadata = {
   name: 'AppKit',
   description: 'AppKit Example',
-  url: 'https://fixsecure.onrender.com', // origin must match your domain & subdomain
+  url: 'https://fixsecure.onrender.com/', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
@@ -29,14 +29,14 @@ const networks = [
   mainnet,
   arbitrum,
   bsc,
-  solana, bitcoin ,  
+  solana, solanaTestnet, solanaDevnet, bitcoin ,   sepolia,
 ]
 
 // 4. Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId,
-  ssr: true
+  ssr: false
 })
 
 // 5. Create modal

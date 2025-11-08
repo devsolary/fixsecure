@@ -1,12 +1,16 @@
 import './App.css'
 import Home from './pages/Home'
+import { AppKitProvider } from './AppKitProvider'
 
 function App() {
 
 
   return (
     <>
-        <Home />
+    <AppKitProvider>
+              <Home />
+    </AppKitProvider>
+
     </>
   )
 }
