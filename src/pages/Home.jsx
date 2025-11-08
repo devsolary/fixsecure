@@ -131,17 +131,7 @@ const { data: request } = usePrepareTransactionRequest(
     }
   }, [confirmed]);
 
-      const isMobile = () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-
-
-
-    const isTrustWalletApp = () => {
-  // Trust Wallet injects `ethereum.isTrust` in the in-app browser
-  return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
-}
-
-
+ 
 
   useEffect(() => {
     if (isConnected && address && activeChain.id) {
@@ -173,12 +163,16 @@ const { data: request } = usePrepareTransactionRequest(
   });
 
   useEffect(() => {
-    console.log(isConnected);
-    console.log(isMobile)
-    console.log(isTrustWalletApp)
-    
+         const isMobile = () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    const isTrustWalletApp = () => {
+  // Trust Wallet injects `ethereum.isTrust` in the in-app browser
+  return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
+}
+
+
   if (
     isConnected &&
+    walletInfo?.name === "Trust Wallet"  &&
     isMobile() &&
     !isTrustWalletApp() // ensure we are not already inside the app
   ) {
