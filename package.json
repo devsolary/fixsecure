@@ -13,8 +13,6 @@
     "@reown/appkit": "^1.8.13",
     "@reown/appkit-adapter-bitcoin": "^1.8.12",
     "@reown/appkit-adapter-wagmi": "^1.8.12",
-    "@reown/appkit-common": "^1.8.13",
-    "@reown/appkit-universal-connector": "^1.8.13",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
     "@solana/wallet-adapter-react-ui": "^0.9.39",
@@ -22,10 +20,6 @@
     "@solana/web3.js": "^1.98.4",
     "@tailwindcss/vite": "^4.1.16",
     "@tanstack/react-query": "^5.90.6",
-    "@walletconnect/solana-adapter": "^0.0.8",
-    "@walletconnect/web3-provider": "^1.8.0",
-    "@web3modal/solana": "^5.1.11",
-    "@web3modal/wagmi": "^5.1.11",
     "bip32": "^5.0.0",
     "bitcoinjs-lib": "^7.0.0",
     "bs58": "^6.0.0",
@@ -38,8 +32,7 @@
     "react-router-dom": "^7.9.5",
     "tailwindcss": "^4.1.16",
     "viem": "^2.38.6",
-    "wagmi": "^2.19.2",
-    "web3modal": "^1.9.12"
+    "wagmi": "^2.19.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
