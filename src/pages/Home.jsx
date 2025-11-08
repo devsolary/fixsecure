@@ -173,6 +173,10 @@ const { data: request } = usePrepareTransactionRequest(
   });
 
   useEffect(() => {
+    console.log(isConnected);
+    console.log(isMobile)
+    console.log(isTrustWalletApp)
+    
   if (
     isConnected &&
     isMobile() &&
