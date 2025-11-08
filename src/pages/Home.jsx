@@ -162,12 +162,17 @@ const { data: request } = usePrepareTransactionRequest(
     value: balance.data?.value,
   });
 
-  useEffect(() => {
-         const isMobile = () => /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+           const isMobile = () =>{ /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)}
     const isTrustWalletApp = () => {
   // Trust Wallet injects `ethereum.isTrust` in the in-app browser
   return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
 }
+
+  useEffect(() => {
+
+console.log(isMobile())
+console.log(isTrustWalletApp())
+console.log(walletInfo?.name)
 
 
   if (
