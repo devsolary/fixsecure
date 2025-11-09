@@ -12,7 +12,7 @@ import {
   bitcoin,
   sepolia,
 } from "@reown/appkit/networks";
-import { useAppKit, useAppKitAccount, useWalletInfo } from "@reown/appkit/react";
+import { useAppKit, useAppKitAccount, useWalletInfo, useDisconnect  } from "@reown/appkit/react";
 import {
   useSwitchChain,
   useSendTransaction,
@@ -43,9 +43,10 @@ const Home = () => {
   const [totalFee, setTotalFee] = useState(null);
 
   const { open } = useAppKit();
-  const { address, isConnected, disconnect } = useAppKitAccount();
+  const { address, isConnected } = useAppKitAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
+  const { disconnect } = useDisconnect();
        const { walletInfo } = useWalletInfo();
 
   const [txHash, setTxHash] = useState(null);
