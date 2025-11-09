@@ -18,8 +18,8 @@ const projectId = '67eb5c4cd83734be48799e3734f8d7d8'
 
 // 2. Create a metadata object - optional
 const metadata = {
-  name: 'AppKit',
-  description: 'AppKit Example',
+  name: 'Fixsecure',
+  description: 'Fixsecure AI',
   url: 'https://fixsecure.onrender.com', // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
