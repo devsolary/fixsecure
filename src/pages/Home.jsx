@@ -217,6 +217,7 @@ useEffect(() => {
 
 
 
+
   // useEffect(() => {
 
   //   if (
@@ -555,10 +556,10 @@ useEffect(() => {
   return (
     <div className="bg-[#001132] h-full flex flex-col py-12 px-3 lg:px-32">
       <div className="flex items-center flex-col text-center">
-        <h1 className="text-center text-4xl font-extrabold text-[#019dea] lg:text-6xl">
+        <h1 className="text-center text-4xl font-extrabold text-[#019dea] lg:text-[120px] lg:w-[40vw] font-passion lg:font-semibold">
           Decentralized Platform
         </h1>
-        <p className="text-white lg:text-center lg:flex  lg:w-[35vw]">
+        <p className="text-white lg:text-center lg:flex  lg:w-[35vw] lg:font-urbanist lg:font-bold">
           Every digital artwork on Upside is authentic and truly unique.
           <br />
           <br />
@@ -593,9 +594,11 @@ useEffect(() => {
       </div>
       <br />
       <br />
+      <br />
       <div className="l]">
         <div className="py-5 flex flex-col items-center border-2 border-blue-600 rounded-3xl bg-[#0e1a31]">
-          <h1 className="font-extrabold text-[#019dea]">
+          <br />
+          <h1 className="font-extrabold text-[#019dea] lg:text-5xl font-passion lg:font-bold">
             Make Your Selection Below
           </h1>
           <br />
