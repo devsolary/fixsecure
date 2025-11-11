@@ -556,10 +556,11 @@ useEffect(() => {
   return (
     <div className="bg-[#001132] h-full flex flex-col py-12 px-3 lg:px-32">
       <div className="flex items-center flex-col text-center">
-        <h1 className="text-center text-4xl font-extrabold text-[#019dea] lg:text-[120px] lg:w-[40vw] font-passion lg:font-semibold">
+        <h1 className="text-center text-5xl  font-bold text-[#019dea] lg:text-[120px] lg:w-[40vw] font-passion lg:font-semibold">
           Decentralized Platform
         </h1>
-        <p className="text-white lg:text-center lg:flex  lg:w-[35vw] lg:font-urbanist lg:font-bold">
+        <br />
+        <p className="text-white lg:text-center lg:flex  lg:w-[30vw] lg:font-urbanist lg:font-bold">
           Every digital artwork on Upside is authentic and truly unique.
           <br />
           <br />
